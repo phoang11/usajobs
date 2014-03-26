@@ -1,0 +1,87 @@
+<?php
+
+/**
+ * @file
+ * Display all current jobs.
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function usajobs_block_info() {
+  
+  $block['usajobs_list']['info'] = t('USAJobs listing');
+    
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function usajobs_block_configure($delta = '') {
+  
+  $form = array();
+  if ($delta == 'usajobs_list') {
+    $form['usajobs_organization_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Federal agency ID'),
+      '#default_value' => variable_get('usajobs_organization_id'),
+      '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.'),
+    );
+  }
+  
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function usajobs_block_save($delta = '', $edit = array()) {
+  if ($delta == 'usajobs_list') {
+    variable_get('usajobs_organization_id', $edit['usajobs_organization_id']);
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Displays all current opening positions.
+ */
+function usajobs_block_view($delta = '') {
+  
+  $block = array();
+
+  $items = array();
+
+  $jobs = usajobs_get_data();
+
+  foreach($jobs as $job) {
+
+    $item  = '<div class="job-title">';
+    $item .= '<a href="'. $job->url . '" target="_blank">'. $job->position_title .'</a>';
+    $item .= '</div>';
+    $item .= '<div class="job-organization">' . $job->organization_name . '</div>';
+    $item .= '<div class="job-location">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+/yr' . '</div>';
+    $item .= '<div class="job-date">' . 'Apply by '.  format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
+
+    $items[] = $item;
+  }
+
+  if ($delta == 'usajobs_list') {
+    $block['subject'] = t('Current Oppotunities');
+    $block['content'] = theme('item_list', array('items' => $items, 'title'=> '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
+    
+  }
+
+  return $block;
+}
+
+/**
+ * Retrieve data from USAJobs.
+ */
+function usajobs_get_data(){
+
+  $url = 'http://api.usa.gov/jobs/search.json?organization_id=HE';
+
+  return json_decode(file_get_contents($url));
+}
