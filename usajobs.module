@@ -85,7 +85,7 @@ function usajobs_block_view($delta = '') {
       'items' => $items,
       'title' => '',
       'type' => 'ul',
-      'attributes' => array('id' => 'jobs-list')
+      'attributes' => array('id' => 'jobs-list'),
     ));
   }
 
@@ -95,14 +95,14 @@ function usajobs_block_view($delta = '') {
 /**
  * Retrieve data from Government Jobs API.
  *
- * This API returns job openings across the federal government and 
- * includes all current openings posted on USAJobs.gov that are open 
- * to the public and located in the United States. 
+ * This API returns job openings across the federal government and
+ * includes all current openings posted on USAJobs.gov that are open
+ * to the public and located in the United States.
  * It also includes some state and local government jobs.
  *
  * http://search.digitalgov.gov/developer/jobs.html
  *
- * @param $organization_id
+ *    @param $organization_id
  *      A federal agency id.
  */
 function usajobs_get_data($organization_id) {
