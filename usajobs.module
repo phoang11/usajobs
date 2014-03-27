@@ -102,8 +102,8 @@ function usajobs_block_view($delta = '') {
  *
  * http://search.digitalgov.gov/developer/jobs.html
  *
- *    @param $organization_id
- *      A federal agency id.
+ * @param string $organization_id
+ *   A federal agency id.
  */
 function usajobs_get_data($organization_id) {
 
