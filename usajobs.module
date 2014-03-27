@@ -26,9 +26,10 @@ function usajobs_block_configure($delta = '') {
       '#title' => t('Federal agency ID'),
       '#default_value' => variable_get('usajobs_organization_id'),
       '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.'),
+      '#required' => TRUE,
     );
   }
-  
+
   return $form;
 }
 
@@ -47,6 +48,27 @@ function usajobs_block_save($delta = '', $edit = array()) {
  * Displays all current opening positions.
  */
 function usajobs_block_view($delta = '') {
+<<<<<<< HEAD
+
+  $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
+
+  $items = array();
+  if (!empty($jobs)) {
+
+    foreach ($jobs as $job) {
+
+      $item  = '<div class="job-title">';
+      $item .= '<a href="' . $job->url . '" target="_blank">' . $job->position_title . '</a>';
+      $item .= '</div>';
+      $item .= '<div class="job-organization">' . $job->organization_name . '</div>';
+      $item .= '<div class="job-location">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+' . '</div>';
+      $item .= '<div class="job-date">' . 'Apply by ' . format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
+
+      $items[] = $item;
+    }
+  }
+  else {
+=======
   
   $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
   
@@ -65,15 +87,23 @@ function usajobs_block_view($delta = '') {
       $items[] = $item;
     }
   }else{
+>>>>>>> 7b9b6e71d7a453661d2d7556c884f5493a23faf0
     $items[] = t('No jobs available.');
   }
 
   $block = array();
+<<<<<<< HEAD
+  if ($delta == 'usajobs') {
+    $block['subject'] = t('Current Oppotunities');
+    $block['content'] = theme('item_list', array('items' => $items, 'title' => '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
+  }
+=======
    if ($delta == 'usajobs') {
      $block['subject'] = t('Current Oppotunities');
      $block['content'] = theme('item_list', array('items' => $items, 'title'=> '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
 
    }
+>>>>>>> 7b9b6e71d7a453661d2d7556c884f5493a23faf0
 
   return $block;
 }
@@ -81,6 +111,15 @@ function usajobs_block_view($delta = '') {
 /**
  * Retrieve data from USAJobs.
  */
+<<<<<<< HEAD
+function usajobs_get_data($organization_id) {
+
+  $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
+
+  // Request data.
+  $result = drupal_http_request($url);
+  switch ($result->code) {
+=======
 function usajobs_get_data($organization_id){
   
   $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
@@ -88,6 +127,7 @@ function usajobs_get_data($organization_id){
   // Request data.
   $result = drupal_http_request($url);
   switch($result->code) {
+>>>>>>> 7b9b6e71d7a453661d2d7556c884f5493a23faf0
     case 200:
     case 301:
     case 302:
