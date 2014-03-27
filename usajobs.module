@@ -9,9 +9,8 @@
  * Implements hook_block_info().
  */
 function usajobs_block_info() {
-  
-  $block['usajobs_list']['info'] = t('USAJobs listing');
-    
+  $block['usajobs']['info'] = t('USAJobs Listing');
+  $block['usajobs']['cache'] = DRUPAL_CACHE_PER_PAGE;
   return $block;
 }
 
@@ -19,9 +18,9 @@ function usajobs_block_info() {
  * Implements hook_block_configure().
  */
 function usajobs_block_configure($delta = '') {
-  
+
   $form = array();
-  if ($delta == 'usajobs_list') {
+  if ($delta == 'usajobs') {
     $form['usajobs_organization_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Federal agency ID'),
@@ -37,8 +36,8 @@ function usajobs_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function usajobs_block_save($delta = '', $edit = array()) {
-  if ($delta == 'usajobs_list') {
-    variable_get('usajobs_organization_id', $edit['usajobs_organization_id']);
+  if ($delta == 'usajobs') {
+    variable_set('usajobs_organization_id', $edit['usajobs_organization_id']);
   }
 }
 
@@ -49,29 +48,32 @@ function usajobs_block_save($delta = '', $edit = array()) {
  */
 function usajobs_block_view($delta = '') {
   
-  $block = array();
-
+  $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
+  
   $items = array();
+  if (!empty($jobs)) {
 
-  $jobs = usajobs_get_data();
+    foreach($jobs as $job) {
 
-  foreach($jobs as $job) {
+      $item  = '<div class="job-title">';
+      $item .= '<a href="'. $job->url . '" target="_blank">'. $job->position_title .'</a>';
+      $item .= '</div>';
+      $item .= '<div class="job-organization">' . $job->organization_name . '</div>';
+      $item .= '<div class="job-location">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+' . '</div>';
+      $item .= '<div class="job-date">' . 'Apply by '.  format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
 
-    $item  = '<div class="job-title">';
-    $item .= '<a href="'. $job->url . '" target="_blank">'. $job->position_title .'</a>';
-    $item .= '</div>';
-    $item .= '<div class="job-organization">' . $job->organization_name . '</div>';
-    $item .= '<div class="job-location">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+/yr' . '</div>';
-    $item .= '<div class="job-date">' . 'Apply by '.  format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
-
-    $items[] = $item;
+      $items[] = $item;
+    }
+  }else{
+    $items[] = t('No jobs available.');
   }
 
-  if ($delta == 'usajobs_list') {
-    $block['subject'] = t('Current Oppotunities');
-    $block['content'] = theme('item_list', array('items' => $items, 'title'=> '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
-    
-  }
+  $block = array();
+   if ($delta == 'usajobs') {
+     $block['subject'] = t('Current Oppotunities');
+     $block['content'] = theme('item_list', array('items' => $items, 'title'=> '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
+
+   }
 
   return $block;
 }
@@ -79,9 +81,23 @@ function usajobs_block_view($delta = '') {
 /**
  * Retrieve data from USAJobs.
  */
-function usajobs_get_data(){
+function usajobs_get_data($organization_id){
+  
+  $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
 
-  $url = 'http://api.usa.gov/jobs/search.json?organization_id=HE';
+  // Request data.
+  $result = drupal_http_request($url);
+  switch($result->code) {
+    case 200:
+    case 301:
+    case 302:
+    case 304:
+    case 307:
+      return json_decode($result->data);
+      break;
+    default:
+      drupal_set_message(t('Connection error "%error".', array('%error' => $result->code . ' ' . $result->error)), 'error');
+  }
 
-  return json_decode(file_get_contents($url));
+  return;
 }

@@ -1,3 +1,4 @@
 name = USAJobs
-description = Provides a block to display all current oppotunities for a state or federal agency.
+description = Provides a block to display all current opportunities for a state or federal agency.
+version = 7.x-1.0
 core = 7.x
