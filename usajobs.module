@@ -9,8 +9,9 @@
  * Implements hook_block_info().
  */
 function usajobs_block_info() {
-  $block['usajobs']['info'] = t('USAJobs Listing');
+  $block['usajobs']['info'] = t('USAJobs listing');
   $block['usajobs']['cache'] = DRUPAL_CACHE_PER_PAGE;
+
   return $block;
 }
 
@@ -18,15 +19,22 @@ function usajobs_block_info() {
  * Implements hook_block_configure().
  */
 function usajobs_block_configure($delta = '') {
-
   $form = array();
+
   if ($delta == 'usajobs') {
     $form['usajobs_organization_id'] = array(
       '#type' => 'textfield',
-      '#title' => t('Federal agency ID'),
+      '#title' => t('Organization ID'),
       '#default_value' => variable_get('usajobs_organization_id'),
       '#required' => TRUE,
-      '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.'),
+      '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /><br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.<br /><br />
+      For state and local agencies, a sample of the format follows. <br /><br />
+      State of Virginia <strong>US-VA</strong><br />
+      State of Virginia Department of Taxation <strong>US-VA:DEPT-TAX</strong><br />
+      Fairfax County, VA <strong>US-VA:COUNTY-FAIRFAX</strong><br />
+      Fairfax County Sheriff <strong>US-VA:COUNTY-FAIRFAX:SHERIFF</strong><br />
+      City of Fairfax, VA <strong>US-VA:COUNTY-FAIRFAX:CITY-FAIRFAX</strong><br />
+      '),
     );
   }
 
@@ -48,46 +56,54 @@ function usajobs_block_save($delta = '', $edit = array()) {
  * Displays all current opening positions.
  */
 function usajobs_block_view($delta = '') {
+  $block = array();
 
+  //Get data
   $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
 
   $items = array();
   if (!empty($jobs)) {
-
     foreach ($jobs as $job) {
 
       $item  = '<div class="job-title">';
       $item .= '<a href="' . $job->url . '" target="_blank">' . $job->position_title . '</a>';
       $item .= '</div>';
       $item .= '<div class="job-organization">' . $job->organization_name . '</div>';
-      $item .= '<div class="job-location">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+' . '</div>';
+      $item .= '<div class="job-location-salary">' . $job->locations[0] . ' - ' . '$' . number_format($job->minimum, 2) . '+' . '</div>';
       $item .= '<div class="job-date">' . 'Apply by ' . format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
 
       $items[] = $item;
     }
   }
   else {
-    $items[] = t('No jobs available.');
+    $items[] = t('No available positions at this time, please check back periodically.');
   }
 
-  $block = array();
   if ($delta == 'usajobs') {
-    $block['subject'] = t('Current Oppotunities');
+    $block['subject'] = t('Current Opportunities');
     $block['content'] = theme('item_list', array('items' => $items, 'title' => '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
-
   }
 
   return $block;
 }
 
 /**
- * Retrieve data from USAJobs.
+ * Retrieve data from Government Jobs API.
+ *
+ * This Jobs API returns job openings across the federal government and includes all current
+ * openings posted on USAJobs.gov that are open to the public and located in the United States.
+ *
+ * http://search.digitalgov.gov/developer/jobs.html
+ *
+ * @param $organization_id
+ *    A federal agency id.
  */
 function usajobs_get_data($organization_id) {
 
+  //Connection string
   $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
 
-  // Request data.
+  //Request data.
   $result = drupal_http_request($url);
   switch ($result->code) {
     case 200:
@@ -101,5 +117,4 @@ function usajobs_get_data($organization_id) {
       drupal_set_message(t('Connection error "%error".', array('%error' => $result->code . ' ' . $result->error)), 'error');
   }
 
-  return;
 }
