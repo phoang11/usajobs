@@ -58,7 +58,7 @@ function usajobs_block_save($delta = '', $edit = array()) {
 function usajobs_block_view($delta = '') {
   $block = array();
 
-  //Get data
+  // Get data.
   $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
 
   $items = array();
@@ -81,7 +81,12 @@ function usajobs_block_view($delta = '') {
 
   if ($delta == 'usajobs') {
     $block['subject'] = t('Current Opportunities');
-    $block['content'] = theme('item_list', array('items' => $items, 'title' => '', 'type' => 'ul', 'attributes' => array('id' => 'jobs-list')));
+    $block['content'] = theme('item_list', array(
+      'items' => $items,
+      'title' => '',
+      'type' => 'ul',
+      'attributes' => array('id' => 'jobs-list')
+    ));
   }
 
   return $block;
@@ -90,20 +95,22 @@ function usajobs_block_view($delta = '') {
 /**
  * Retrieve data from Government Jobs API.
  *
- * This Jobs API returns job openings across the federal government and includes all current
- * openings posted on USAJobs.gov that are open to the public and located in the United States.
+ * This API returns job openings across the federal government and 
+ * includes all current openings posted on USAJobs.gov that are open 
+ * to the public and located in the United States. 
+ * It also includes some state and local government jobs.
  *
  * http://search.digitalgov.gov/developer/jobs.html
  *
  * @param $organization_id
- *    A federal agency id.
+ *      A federal agency id.
  */
 function usajobs_get_data($organization_id) {
 
-  //Connection string
+  // Connection string.
   $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
 
-  //Request data.
+  // Request data.
   $result = drupal_http_request($url);
   switch ($result->code) {
     case 200:
@@ -112,7 +119,6 @@ function usajobs_get_data($organization_id) {
     case 304:
     case 307:
       return json_decode($result->data);
-      break;
     default:
       drupal_set_message(t('Connection error "%error".', array('%error' => $result->code . ' ' . $result->error)), 'error');
   }
