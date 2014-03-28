@@ -6,11 +6,23 @@
  */
 
 /**
+ * Implements hook_theme().
+ */
+function usajobs_theme() {
+  return array(
+    'usajobs_item' => array(
+      'variables' => array('item' => NULL),
+      'template' => 'usajobs-item',
+    ),
+  );
+}
+
+/**
  * Implements hook_block_info().
  */
 function usajobs_block_info() {
-  $block['usajobs']['info'] = t('USAJobs listing');
-  $block['usajobs']['cache'] = DRUPAL_CACHE_PER_PAGE;
+  $block['job-listing']['info'] = t('USAJobs listing');
+  $block['job-listing']['cache'] = DRUPAL_CACHE_PER_PAGE;
 
   return $block;
 }
@@ -21,7 +33,7 @@ function usajobs_block_info() {
 function usajobs_block_configure($delta = '') {
   $form = array();
 
-  if ($delta == 'usajobs') {
+  if ($delta == 'job-listing') {
     $form['usajobs_organization_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Organization ID'),
@@ -45,7 +57,7 @@ function usajobs_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function usajobs_block_save($delta = '', $edit = array()) {
-  if ($delta == 'usajobs') {
+  if ($delta == 'job-listing') {
     variable_set('usajobs_organization_id', $edit['usajobs_organization_id']);
   }
 }
@@ -58,38 +70,63 @@ function usajobs_block_save($delta = '', $edit = array()) {
 function usajobs_block_view($delta = '') {
   $block = array();
 
-  // Get data.
-  $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
-
-  $items = array();
-  if (!empty($jobs)) {
-    foreach ($jobs as $job) {
-
-      $item  = '<div class="job-title">';
-      $item .= '<a href="' . $job->url . '" target="_blank">' . check_plain($job->position_title) . '</a>';
-      $item .= '</div>';
-      $item .= '<div class="job-organization">' . check_plain($job->organization_name) . '</div>';
-      $item .= '<div class="job-location-salary">' . check_plain($job->locations[0]) . ' - ' . '$' . number_format($job->minimum, 2) . '+' . '</div>';
-      $item .= '<div class="job-date">' . 'Apply by ' . format_date(strtotime($job->end_date), 'custom', 'F d, Y') . '</div>';
-
-      $items[] = $item;
-    }
-  }
-  else {
-    $items[] = t('No available positions at this time, please check back periodically.');
-  }
-
-  if ($delta == 'usajobs') {
+  if ($delta == 'job-listing') {
     $block['subject'] = t('Current Opportunities');
-    $block['content'] = theme('item_list', array(
-      'items' => $items,
-      'title' => '',
-      'type' => 'ul',
-      'attributes' => array('id' => 'jobs-list'),
-    ));
+    $block['content'] = _usajobs_block_content();
   }
 
   return $block;
+}
+
+/**
+ * Fetch data and render with custom item template.
+ *
+ * @return
+ *   The rendered list of items for the block content.
+ */
+function _usajobs_block_content() {
+  $output = '';
+
+  // Get data.
+  $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
+
+  if (empty($jobs)) {
+    $output = t('No available positions at this time, please check back periodically.');
+  }
+  else {
+    foreach ($jobs as $job) {
+      $output .= theme('usajobs_item', array('item' => $job));
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Processes variables for usajobs-item.tpl.php.
+ *
+ * @see usajobs-item.tpl.php
+ */
+function template_preprocess_usajobs_item(&$variables) {
+  $item = $variables['item'];
+
+  $variables['job_title'] = check_plain($item->position_title);
+  $variables['job_url'] = check_url($item->url);
+  $variables['job_organization'] = check_plain($item->organization_name);
+  $variables['job_location'] = check_plain($item->locations[0]);
+  $variables['job_salary_min'] = number_format($item->minimum, 2);
+  $variables['job_salary_max'] = number_format($item->maximum, 2);
+
+  $variables['job_start_date'] = '';
+  if (isset($item->start_date)) {
+    $variables['job_start_date'] = format_date(strtotime($item->start_date), 'custom', 'F d, Y');
+  }
+
+  $variables['job_end_date'] = '';
+  if (isset($item->end_date)) {
+    $variables['job_end_date'] = format_date(strtotime($item->end_date), 'custom', 'F d, Y');
+  }
+
 }
 
 /**
@@ -119,6 +156,7 @@ function usajobs_get_data($organization_id) {
     case 304:
     case 307:
       return json_decode($result->data);
+      // No break here.
 
     default:
       drupal_set_message(t('Connection error "%error".', array('%error' => $result->code . ' ' . $result->error)), 'error');
