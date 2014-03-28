@@ -30,8 +30,9 @@ None.
 
     For federal agencies, the ID is based on USAJobs' agency schema.
 
-    Two letter codes are used to span entire departments, while four letter codes
-    are generally used for independent agencies or agencies within a department.
+    Two letter codes are used to span entire departments, while four letter
+    codes are generally used for independent agencies or agencies within
+    a department.
 
     For state and local agencies, a sample of the format follows.
 

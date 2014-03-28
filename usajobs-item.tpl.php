@@ -15,8 +15,8 @@
  * - $job_start_date: Start date for applying job.
  * - $job_end_date: End date for applaying job.
  *
- * To make your custom template with all available variables above, copy this file
- * and place in your theme folder and clear caches to see your changed.
+ * To make your custom template with all available variables above, copy this
+ * file and place in your theme folder and clear caches to see your changed.
  *
  * @see template_preprocess()
  * @see template_preprocess_usajobs_item()

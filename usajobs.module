@@ -81,7 +81,7 @@ function usajobs_block_view($delta = '') {
 /**
  * Fetch data and render with custom item template.
  *
- * @return
+ * @return string
  *   The rendered list of items for the block content.
  */
 function _usajobs_block_content() {
@@ -156,7 +156,6 @@ function usajobs_get_data($organization_id) {
     case 304:
     case 307:
       return json_decode($result->data);
-      // No break here.
 
     default:
       drupal_set_message(t('Connection error "%error".', array('%error' => $result->code . ' ' . $result->error)), 'error');
