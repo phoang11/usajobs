@@ -72,7 +72,13 @@ function usajobs_block_view($delta = '') {
 
   if ($delta == 'job-listing') {
     $block['subject'] = t('Current Opportunities');
-    $block['content'] = _usajobs_block_content();
+    $block['content']['#markup'] = _usajobs_block_content();
+    $block['content']['#attached'] = array(
+      'css' => array(drupal_get_path('module', 'usajobs') . '/usajobs.css'),
+      'group' => CSS_DEFAULT,
+      'every_page' => FALSE,
+      'preprocess' => TRUE,
+    );
   }
 
   return $block;
@@ -98,6 +104,8 @@ function _usajobs_block_content() {
       $output .= theme('usajobs_item', array('item' => $job));
     }
   }
+
+  $output = '<div id="usajobs">'. $output . '</div>';
 
   return $output;
 }
