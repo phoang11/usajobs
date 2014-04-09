@@ -105,7 +105,7 @@ function _usajobs_block_content() {
     }
   }
 
-  $output = '<div id="usajobs">'. $output . '</div>';
+  $output = '<div id="usajobs">' . $output . '</div>';
 
   return $output;
 }
