@@ -147,13 +147,13 @@ function template_preprocess_usajobs_item(&$variables) {
  *
  * http://search.digitalgov.gov/developer/jobs.html
  *
- * @param string $organization_id
+ * @param string $organization_ids
  *   A federal agency id.
  */
-function usajobs_get_data($organization_id) {
+function usajobs_get_data($organization_ids) {
 
   // Connection string.
-  $url = format_string('http://api.usa.gov/jobs/search.json?organization_id=@organization_id', array('@organization_id' => $organization_id));
+  $url = format_string('http://api.usa.gov/jobs/search.json?organization_ids=@organization_ids', array('@organization_ids' => $organization_ids));
 
   // Request data.
   $result = drupal_http_request($url);
