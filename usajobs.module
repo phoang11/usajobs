@@ -34,10 +34,10 @@ function usajobs_block_configure($delta = '') {
   $form = array();
 
   if ($delta == 'job-listing') {
-    $form['usajobs_organization_id'] = array(
+    $form['usajobs_organization_ids'] = array(
       '#type' => 'textfield',
       '#title' => t('Organization ID'),
-      '#default_value' => variable_get('usajobs_organization_id'),
+      '#default_value' => variable_get('usajobs_organization_ids'),
       '#required' => TRUE,
       '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /><br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.<br /><br />
       For state and local agencies, a sample of the format follows. <br /><br />
@@ -58,7 +58,7 @@ function usajobs_block_configure($delta = '') {
  */
 function usajobs_block_save($delta = '', $edit = array()) {
   if ($delta == 'job-listing') {
-    variable_set('usajobs_organization_id', $edit['usajobs_organization_id']);
+    variable_set('usajobs_organization_ids', $edit['usajobs_organization_ids']);
   }
 }
 
@@ -94,7 +94,7 @@ function _usajobs_block_content() {
   $output = '';
 
   // Get data.
-  $jobs = usajobs_get_data(variable_get('usajobs_organization_id'));
+  $jobs = usajobs_get_data(variable_get('usajobs_organization_ids'));
 
   if (empty($jobs)) {
     $output = t('No available positions at this time, please check back periodically.');
