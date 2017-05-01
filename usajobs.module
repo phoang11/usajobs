@@ -153,7 +153,7 @@ function template_preprocess_usajobs_item(&$variables) {
 function usajobs_get_data($organization_ids) {
 
   // Connection string.
-  $url = format_string('http://api.usa.gov/jobs/search.json?organization_ids=@organization_ids', array('@organization_ids' => $organization_ids));
+  $url = format_string('https://api.usa.gov/jobs/search.json?organization_ids=@organization_ids', array('@organization_ids' => $organization_ids));
 
   // Request data.
   $result = drupal_http_request($url);
