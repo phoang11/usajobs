@@ -56,7 +56,7 @@ function usajobs_block_configure($delta = '') {
       '#maxlength' => 3,
       '#required' => TRUE,
       '#description' => t('Specifies how many results are displayed (up to 100).'),
-      '#element_validate' => array('element_validate_usajobs_size')
+      '#element_validate' => array('usajobs_size_validate'),
     );
   }
 
@@ -66,7 +66,7 @@ function usajobs_block_configure($delta = '') {
 /**
  * Form element validation handler for USAJobs size element (integer 0 - 100).
  */
-function element_validate_usajobs_size($element, &$form_state) {
+function usajobs_size_validate($element, &$form_state) {
   $value = $element['#value'];
   if ($value !== '' && (!is_numeric($value) || intval($value) != $value || $value <= 0 || $value > 100)) {
     form_error($element, t('%name must be an integer between 1 and 100.', array('%name' => $element['#title'])));
@@ -179,7 +179,7 @@ function usajobs_get_data($organization_ids, $size) {
   $url = format_string('https://api.usa.gov/jobs/search.json?organization_ids=@organization_ids&size=@size',
     array(
       '@organization_ids' => $organization_ids,
-      '@size' => $size
+      '@size' => $size,
     )
   );
 
