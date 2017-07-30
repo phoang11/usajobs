@@ -10,4 +10,5 @@
  */
 function usajobs_uninstall() {
   variable_del('usajobs_organization_id');
+  variable_del('usajobs_size');
 }

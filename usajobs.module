@@ -48,9 +48,29 @@ function usajobs_block_configure($delta = '') {
       City of Fairfax, VA <strong>US-VA:COUNTY-FAIRFAX:CITY-FAIRFAX</strong><br />
       '),
     );
+    $form['usajobs_size'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Maximum Number of Jobs to Display'),
+      '#default_value' => (NULL !== variable_get('usajobs_size')) ? variable_get('usajobs_size') : '10',
+      '#size' => 5,
+      '#maxlength' => 3,
+      '#required' => TRUE,
+      '#description' => t('Specifies how many results are displayed (up to 100).'),
+      '#element_validate' => array('element_validate_usajobs_size')
+    );
   }
 
   return $form;
+}
+
+/**
+ * Form element validation handler for USAJobs size element (integer 0 - 100).
+ */
+function element_validate_usajobs_size($element, &$form_state) {
+  $value = $element['#value'];
+  if ($value !== '' && (!is_numeric($value) || intval($value) != $value || $value <= 0 || $value > 100)) {
+    form_error($element, t('%name must be an integer between 1 and 100.', array('%name' => $element['#title'])));
+  }
 }
 
 /**
@@ -59,6 +79,7 @@ function usajobs_block_configure($delta = '') {
 function usajobs_block_save($delta = '', $edit = array()) {
   if ($delta == 'job-listing') {
     variable_set('usajobs_organization_ids', $edit['usajobs_organization_ids']);
+    variable_set('usajobs_size', $edit['usajobs_size']);
   }
 }
 
@@ -94,10 +115,10 @@ function _usajobs_block_content() {
   $output = '';
 
   // Get data.
-  $jobs = usajobs_get_data(variable_get('usajobs_organization_ids'));
+  $jobs = usajobs_get_data(variable_get('usajobs_organization_ids'), variable_get('usajobs_size', 10));
 
   if (empty($jobs)) {
-    $output = t('No available positions at this time, please check back periodically.');
+    $output = t('No available position at this time, please check back periodically.');
   }
   else {
     foreach ($jobs as $job) {
@@ -149,11 +170,18 @@ function template_preprocess_usajobs_item(&$variables) {
  *
  * @param string $organization_ids
  *   A federal agency id.
+ * @param int $size
+ *   Number of return result size.
  */
-function usajobs_get_data($organization_ids) {
+function usajobs_get_data($organization_ids, $size) {
 
   // Connection string.
-  $url = format_string('https://api.usa.gov/jobs/search.json?organization_ids=@organization_ids', array('@organization_ids' => $organization_ids));
+  $url = format_string('https://api.usa.gov/jobs/search.json?organization_ids=@organization_ids&size=@size',
+    array(
+      '@organization_ids' => $organization_ids,
+      '@size' => $size
+    )
+  );
 
   // Request data.
   $result = drupal_http_request($url);

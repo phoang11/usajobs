@@ -6,10 +6,10 @@ which is collecting across federal governments and includes all current openings
 posted on USAJobs.gov.
 
 For a full description of the module, visit the project page:
-  https://drupal.org/sandbox/axlrose/2225805
+  https://www.drupal.org/project/usajobs
 
 To submit bug reports and feature suggestions, or to track changes:
-  https://drupal.org/project/issues/2225805
+  https://www.drupal.org/project/issues/usajobs
 
 
 -- REQUIREMENTS --
@@ -41,6 +41,8 @@ None.
     Fairfax County, VA US-VA:COUNTY-FAIRFAX
     Fairfax County Sheriff US-VA:COUNTY-FAIRFAX:SHERIFF
     City of Fairfax, VA US-VA:COUNTY-FAIRFAX:CITY-FAIRFAX
+    
+  - Enter the Maximum Number of Jobs to Display.
 
 -- CUSTOM TEMPLATE --
 * Override USAJobs template
