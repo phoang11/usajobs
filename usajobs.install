@@ -9,6 +9,6 @@
  * Implements hook_uninstall().
  */
 function usajobs_uninstall() {
-  variable_del('usajobs_organization_id');
-  variable_del('usajobs_size');
+  Drupal::configFactory()->getEditable('usajobs_organization_ids')->delete();
+  Drupal::configFactory()->getEditable('usajobs_size')->delete();
 }

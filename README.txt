@@ -19,7 +19,7 @@ None.
 
 -- INSTALLATION --
 
-* Install as usual, see http://drupal.org/node/70151 for further information.
+* Install as usual, see https://www.drupal.org/project/usajobs for further information.
 
 
 -- CONFIGURATION --
@@ -41,10 +41,10 @@ None.
     Fairfax County, VA US-VA:COUNTY-FAIRFAX
     Fairfax County Sheriff US-VA:COUNTY-FAIRFAX:SHERIFF
     City of Fairfax, VA US-VA:COUNTY-FAIRFAX:CITY-FAIRFAX
-    
+
   - Enter the Maximum Number of Jobs to Display.
 
 -- CUSTOM TEMPLATE --
 * Override USAJobs template
- - Copy file usajobs-item.tpl.php to your theme folder.
+ - Copy file usajobs-item.html.twig to your theme folder.
  - Clear caches.
