@@ -176,7 +176,7 @@ function template_preprocess_usajobs_item(&$variables) {
 function usajobs_get_data($organization_ids, $size) {
 
   // Connection string.
-  $url = format_string('https://api.usa.gov/jobs/search.json?organization_ids=@organization_ids&size=@size',
+  $url = format_string('https://jobs.search.gov/jobs/search.json?organization_ids=@organization_ids&size=@size',
     array(
       '@organization_ids' => $organization_ids,
       '@size' => $size,
