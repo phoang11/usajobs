@@ -86,7 +86,7 @@ class USAJobsBlock extends BlockBase implements BlockPluginInterface {
 
     // Request USAJobs Search API.
     $client = \Drupal::httpClient();
-    $request_url = 'https://api.usa.gov/jobs/search.json';
+    $request_url = 'https://jobs.search.gov/jobs/search.json';
     $query = array (
       'organization_ids' => $this->configuration['usajobs_organization_ids'],
       'size' => $this->configuration['usajobs_size'],
