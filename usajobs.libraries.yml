@@ -1,5 +1,5 @@
-drupal.usajobs:
+usajobs:
   version: VERSION
   css:
     component:
-      css/usajobs.module.css: {}
+      css/usajobs.css: {}

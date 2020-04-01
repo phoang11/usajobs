@@ -1,0 +1,4 @@
+administer usajobs:
+  title: 'Administer USAJobs configuration'
+  description: 'Administer the USAJobs configuration.'
+  restrict access: true
