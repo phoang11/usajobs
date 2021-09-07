@@ -1,5 +1,4 @@
 usajobs:
-  version: VERSION
   css:
-    component:
+    theme:
       css/usajobs.css: {}

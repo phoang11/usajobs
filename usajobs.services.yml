@@ -1,0 +1,4 @@
+services:
+  usajobs.api_client:
+    class: Drupal\usajobs\Service\UsaJobsApiClient
+    arguments: ['@config.factory', '@cache.default', '@logger.factory']
