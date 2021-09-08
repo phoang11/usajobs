@@ -1,0 +1,6 @@
+usajobs.usajobs_config_form:
+  title: 'USAJobs'
+  route_name: usajobs.usajobs_config_form
+  description: 'Configure the USAJobs API.'
+  parent: system.admin_config_services
+  weight: 99

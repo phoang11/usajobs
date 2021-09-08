@@ -1,8 +1,16 @@
 usajobs.settings:
-  type: mapping
-  label: 'Settings for USAJobs'
+  type: config_object
+  label: 'USAJobs Settings'
   mapping:
-    usajobs_organization_ids:
+    host:
       type: string
-    usajobs_size:
-      type: integer
+      label: 'Host'
+    user_agent:
+      type: email
+      label: 'User Agent'
+    authorization_key:
+      type: string
+      label: 'Authorization Key'
+    organization_id:
+      type: string
+      label: 'Organization ID'

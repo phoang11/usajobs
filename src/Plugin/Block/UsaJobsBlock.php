@@ -1,125 +1,91 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\usajobs\Plugin\Block\UsaJobsBlock.
- */
-
 namespace Drupal\usajobs\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Block\BlockPluginInterface;
-use Drupal\Core\Form\FormStateInterface;
-use GuzzleHttp\Exception\RequestException;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\usajobs\Service\UsaJobsApiClientInterface;
 
 /**
- * Provides a 'USAJobs' block.
+ * Provides a 'UsaJobsBlock' block.
  *
  * @Block(
- *   id = "usajobs_block",
- *   admin_label = @Translation("USAJobs Listing"),
+ *  id = "usajobs_block",
+ *  admin_label = @Translation("USAJobs Listing"),
  * )
  */
-class USAJobsBlock extends BlockBase implements BlockPluginInterface {
+class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * {@inheritdoc}
+   * Drupal\Core\Config\ConfigFactoryInterface definition.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  public function blockForm($form, FormStateInterface $form_state) {
-    $form = parent::blockForm($form, $form_state);
+  protected $configFactory;
 
-    $default_config = \Drupal::config('usajobs.settings');
-    $config = $this->getConfiguration();
+  /**
+   * Drupal\usajobs\Service\UsaJobsApiClientInterface definition.
+   *
+   * @var Drupal\usajobs\Service\UsaJobsApiClientInterface
+   */
+  protected $usajobs;
 
-    $form['usajobs_organization_ids'] = array (
-      '#type' => 'textfield',
-      '#title' => t('Organization ID'),
-      '#default_value' => isset($config['usajobs_organization_ids']) ? $config['usajobs_organization_ids'] : $default_config->get('usajobs_organization_ids'),
-      '#required' => TRUE,
-      '#description' => t('Specifies which federal, state, or local agency to use as a filter.<br /><br /> For federal agencies, the ID is based on <a href="https://schemas.usajobs.gov/Enumerations/AgencySubElement.xml" target="_blank">USAJobs\' agency schema</a>. Two letter codes are used to span entire departments, while four letter codes are generally used for independent agencies or agencies within a department.<br /><br />
-      For state and local agencies, a sample of the format follows. <br /><br />
-      State of Virginia <strong>US-VA</strong><br />
-      State of Virginia Department of Taxation <strong>US-VA:DEPT-TAX</strong><br />
-      Fairfax County, VA <strong>US-VA:COUNTY-FAIRFAX</strong><br />
-      Fairfax County Sheriff <strong>US-VA:COUNTY-FAIRFAX:SHERIFF</strong><br />
-      City of Fairfax, VA <strong>US-VA:COUNTY-FAIRFAX:CITY-FAIRFAX</strong><br />
-      '),
-    );
-
-    $form['usajobs_size'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Maximum Number of Jobs to Display'),
-      '#default_value' => isset($config['usajobs_size']) ? $config['usajobs_size'] : $default_config->get('usajobs_size'),
-      '#size' => 5,
-      '#maxlength' => 3,
-      '#required' => TRUE,
-      '#description' => t('Specifies how many results are displayed (up to 100).'),
-    );
-
-    return $form;
+  /**
+   * UsaJobsBlock constructor.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin ID for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\usajobs\Service\UsaJobsApiClientInterface $usa_jobs
+   *   The usajobs data from API call.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UsaJobsApiClientInterface $usa_jobs) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->usajobs = $usa_jobs;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function blockValidate($form, FormStateInterface $form_state) {
-    $size = $form_state->getValue('usajobs_size');
-    if ($size !== '' && (!is_numeric($size) || intval($size) != $size || $size <= 0 || $size > 100)) {
-      $form_state->setErrorByName('usajobs_size', $this->t('Please enter an integer number between 1 and 100.'));
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function blockSubmit($form, FormStateInterface $form_state) {
-    parent::blockSubmit($form, $form_state);
-
-    $this->configuration['usajobs_organization_ids'] = $form_state->getValue('usajobs_organization_ids');
-    $this->configuration['usajobs_size'] = $form_state->getValue('usajobs_size');
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = new static($configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('usajobs.api_client'));
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
   public function build() {
+    $build = [];
 
-    // Request USAJobs Search API.
-    $client = \Drupal::httpClient();
-    $request_url = 'https://jobs.search.gov/jobs/search.json';
-    $query = array (
-      'organization_ids' => $this->configuration['usajobs_organization_ids'],
-      'size' => $this->configuration['usajobs_size'],
-    );
-
-    try {
-      $response = $client->get($request_url, ['query' => $query]);
-      $results = json_decode($response->getBody());
-    }
-    catch(RequestException $e) {
-      watchdog_exception('usajobs', $e->getMessage());
-    }
-
-    //Prepare mockup for the output.
-    $markup ='';
-    foreach ($results as $result) {
+    $jobs = $this->usajobs->getJobs();
+    $jobs = $jobs->data->SearchResult->SearchResultItems;
+    $markup = '';
+    foreach ($jobs as $job) {
       $job_item = [
         '#theme' => 'usajobs_item',
-        '#items' => $result,
+        '#item' => $job->MatchedObjectDescriptor,
       ];
+      $markup .= \Drupal::service('renderer')->render($job_item);
+    }
 
-      $markup .= drupal_render($job_item);
-     }
+    if (empty($markup)) {
+      $markup = $this->t('There are no vacancy announcements at this time..');
+    }
 
-    $markup = '<div id="usajobs">' . $markup . '</div>';
-
-    //Build block content.
     $build = [
       '#markup' => $markup,
       '#attached' => [
-         'library' => [
-           'usajobs/drupal.usajobs',
-         ],
+        'library' => [
+          'usajobs/usajobs',
+        ],
       ],
     ];
 

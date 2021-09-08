@@ -21,14 +21,14 @@
  * @ingroup themeable
  */
 #}
-<div class="job-item">
-  <div class="job-item-title">
-    <a href="{{ job_url }}" target="_blank">{{ job_title }}</a>
+<div class="usajobs-item">
+  <div class="usajobs-item-title">
+    <a href="{{ job_url }}" title="View position {{ job_title }}" target="_blank">{{ job_title }}</a>
   </div>
-  <div class="job-item-organization">{{ job_organization }}</div>
-  <div class="job-item-location-salary">
-    <span class="job-item-location">{{ job_location }}</span> |
-    <span class="job-item-salary-min">${{ job_salary_min }}+</span>
+{#  <div class="job-item-organization">{{ job_organization }}</div>#}
+  <div class="usajobs-item-location-salary">
+    <span class="usajobs-item-location">{{ job_location }}</span> |
+    <span class="usajobs-item-salary-min">${{ job_salary_min }}+</span>
   </div>
-  <div class="job-item-end-date">Apply by {{ job_end_date }}</div>
+  <div class="usajobs-item-end-date">Apply by {{ job_end_date }}</div>
 </div>

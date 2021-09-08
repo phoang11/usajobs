@@ -1,11 +1,9 @@
 name: USAJobs
 type: module
 description: 'Provides a block to display all current opportunities for a state or federal agency.'
-version: VERSION
-core: 8.x
-core_version_requirement: ^8.8 || ^9
+core_version_requirement: ^8 || ^9
 configure: usajobs.settings
 dependencies:
-  - block
+  - drupal:block
 test_dependencies:
   - drupal:system (>= 8.8.0)
