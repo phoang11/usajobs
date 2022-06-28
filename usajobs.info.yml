@@ -1,7 +1,7 @@
 name: USAJobs
 type: module
 description: 'Provides a block to display all current opportunities for a state or federal agency.'
-core_version_requirement: ^8 || ^9
+core_version_requirement: '>=^8'
 configure: usajobs.settings
 dependencies:
   - drupal:block
