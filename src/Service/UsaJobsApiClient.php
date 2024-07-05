@@ -3,8 +3,8 @@
 namespace Drupal\usajobs\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Utility\Error;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -46,13 +46,13 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    * Constructs a new UsaJobsApiClient object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_default
+   *   Config factory service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $cache_default, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory) {
 
     $this->configFactory = $config_factory;
-    $this->cacheDefault = $cache_default;
     $this->loggerFactory = $logger_factory;
 
     // Get the config.
@@ -64,6 +64,9 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
       'User-Agent' => $config->get('user_agent'),
       'Authorization-Key' => $config->get('authorization_key'),
       'organization_id' => $config->get('organization_id'),
+      'results_per_page' => $config->get('results_per_page'),
+      'sort_field' => $config->get('sort_field'),
+      'sort_direction' => $config->get('sort_direction'),
       'Accept' => 'application/json',
     ];
   }
@@ -79,34 +82,34 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function getJobs() {
     return $this->requestJobs();
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function getAgencyList() {
     return $this->requestAgencyList();
   }
 
   /**
-   * @return mixed
-   *   Return the USAJobs data from API request call.
+   * Return the USAJobs data from API request call.
    */
   public function requestJobs() {
     $args = [
       'Organization' => $this->clientConfig['organization_id'],
+      'ResultsPerPage' => $this->clientConfig['results_per_page'],
+      'SortField' => $this->clientConfig['sort_field'],
     ];
     $endpoint_url = 'https://' . $this->clientConfig['Host'] . self::USAJOBS_SEARCH_ENDPOINT;
     return $this->fetch($endpoint_url, $args);
   }
 
   /**
-   * @return mixed
-   *   Get the Federal agency list from USAJOBs.
+   * Get the Federal agency list from USAJOBs.
    */
   public function requestAgencyList() {
     $endpoint_url = 'https://' . $this->clientConfig['Host'] . self::USAJOBS_AGENCY_SUBELEMENTS;
@@ -114,13 +117,12 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   }
 
   /**
+   * Fetch data from USAJOBS.gov.
+   *
    * @param string $endpoint_url
    *   The complete endpoint url of API call.
    * @param array $parameters
    *   The API call parameters.
-   *
-   * @return bool|array
-   *   Fetch data from USAJOBS.gov.
    */
   private function fetch($endpoint_url, array $parameters = []) {
 
@@ -141,7 +143,12 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
       return json_decode($results);
     }
     catch (RequestException $e) {
-      watchdog_exception('usajobs', $e);
+      if (version_compare(\Drupal::VERSION, '10.1.0', '>=')) {
+        Error::logException($this->loggerFactory->get('usajobs'), $e);
+      }
+      else {
+        watchdog_exception('usajobs', $e);
+      }
       return FALSE;
     }
   }

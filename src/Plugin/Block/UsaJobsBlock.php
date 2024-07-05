@@ -4,8 +4,8 @@ namespace Drupal\usajobs\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\usajobs\Service\UsaJobsApiClientInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'UsaJobsBlock' block.
@@ -67,6 +67,10 @@ class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface 
 
     $jobs = $this->usajobs->getJobs();
     $jobs = $jobs->data->SearchResult->SearchResultItems;
+
+    // Allow other modules to alter the jobs data.
+    \Drupal::moduleHandler()->alter('usajobs_pre_render_jobs', $jobs, $this);
+
     $markup = '';
     foreach ($jobs as $job) {
       $job_item = [
@@ -77,7 +81,7 @@ class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface 
     }
 
     if (empty($markup)) {
-      $markup = $this->t('There are no vacancy announcements at this time..');
+      $markup = $this->t('Currently, there are no job openings available.');
     }
 
     $build = [
@@ -86,6 +90,9 @@ class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface 
         'library' => [
           'usajobs/usajobs',
         ],
+      ],
+      '#cache' => [
+        'max-age' => 0,
       ],
     ];
 

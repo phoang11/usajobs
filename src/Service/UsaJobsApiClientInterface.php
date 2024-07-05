@@ -14,30 +14,33 @@ interface UsaJobsApiClientInterface {
    */
   const USAJOBS_CONFIG_NAME = 'usajobs.settings';
 
+  /**
+   * The number of results per page.
+   */
+  const RESULTS_PER_PAGE = 10;
 
   /**
-   * The USAJobs search endpoint.
+   * The default sort field.
+   */
+  const SORT_FIELD = 'closedate';
+
+  /**
+   * The USAJobs Job Search endpoint.
    */
   const USAJOBS_SEARCH_ENDPOINT = '/api/Search';
 
   /**
-   * The USAJobs codelist endpoint.
+   * The USAJobs Agency Subelements endpoint .
    */
   const USAJOBS_AGENCY_SUBELEMENTS = '/api/codelist/agencysubelements';
 
   /**
    * Retrieves jobs information.
-   *
-   * @return \Drupal\usajobs\Job
-   *   The jobs data from API call.
    */
   public function getJobs();
 
   /**
-   * Retrieves agencies list.
-   *
-   * @return \Drupal\usajobs\AgencyList
-   *   The agencies list data from API call.
+   * Retrieves the Federal agency list.
    */
   public function getAgencyList();
 

@@ -30,10 +30,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
   }
 
   /**
-   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-   *
-   * @return \Drupal\Core\Form\ConfigFormBase|\Drupal\usajobs\Form\UsaJobsConfigForm|static
-   *   The usajobs service api.
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static($container->get('usajobs.api_client'));
@@ -105,6 +102,37 @@ class UsaJobsConfigForm extends ConfigFormBase {
       '#options' => $agency_sub_elements,
       '#description' => $this->t('Select the Organizations.'),
       '#default_value' => $config->get('organization_id'),
+    ];
+
+    $form['query_tab']['results_per_page'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Results Per Page'),
+      '#options' => [
+        5 => $this->t('5'),
+        10 => $this->t('10'),
+        15 => $this->t('15'),
+        20 => $this->t('20'),
+        25 => $this->t('25'),
+        30 => $this->t('30'),
+        40 => $this->t('40'),
+        50 => $this->t('50'),
+        100 => $this->t('100'),
+        200 => $this->t('200'),
+        300 => $this->t('300'),
+        500 => $this->t('500'),
+      ],
+      '#default_value' => $config->get('results_per_page') ?: UsaJobsApiClientInterface::RESULTS_PER_PAGE,
+    ];
+
+    $form['query_tab']['sort_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Sort Field'),
+      '#options' => [
+        'opendate' => $this->t('Position start date'),
+        'closedate' => $this->t('Position end date'),
+        'positiontitle' => $this->t('Position title'),
+      ],
+      '#default_value' => $config->get('sort_field') ?: UsaJobsApiClientInterface::SORT_FIELD,
     ];
 
     // Field Data Source tab.
@@ -221,6 +249,8 @@ class UsaJobsConfigForm extends ConfigFormBase {
       ->set('user_agent', $form_state->getValue('user_agent'))
       ->set('authorization_key', $form_state->getValue('authorization_key'))
       ->set('organization_id', $form_state->getValue('organization_id'))
+      ->set('results_per_page', $form_state->getValue('results_per_page'))
+      ->set('sort_field', $form_state->getValue('sort_field'))
       ->set('field.field_data_source', array_filter($form_state->getValue('field_data_source')))
       ->save();
   }
@@ -235,8 +265,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
   }
 
   /**
-   * @return mixed
-   *   The agencies list data from API call.
+   * Get Agency Sub Elements.
    */
   protected function getAgencySubElements() {
     // Get Agency List data.
