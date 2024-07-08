@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the USAJobs module.
+ */
+
+/**
+ * Update host url include HTTPS protocol.
+ */
+function usajobs_update_80201() {
+  $config = \Drupal::configFactory()->getEditable('usajobs.settings');
+  $config->set('host', 'https://data.usajobs.gov');
+  $config->save();
+  \Drupal::messenger()->addStatus(t('Updated the host configuration.'));
+}

@@ -4,13 +4,11 @@
     "description": "Provides a block of job listings retrieved from the USAJobs Search API.",
     "homepage": "https://www.drupal.org/project/usajobs",
     "license": "GPL-2.0+",
-    "minimum-stability": "dev",
-    "require": {
-        "drupal/core": "^8 || ^9 || ^10"
-    },
     "support": {
         "issues": "https://www.drupal.org/project/issues/usajobs",
         "source": "http://cgit.drupalcode.org/usajobs"
+    },
+    "require": {
+        "drupal/core": ">=8 <10.1"
     }
-
 }

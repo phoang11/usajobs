@@ -57,7 +57,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $form['usajobs_basic']['host'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Host'),
-      '#description' => $this->t('The USAJobs API host address. Default: data.usajobs.gov'),
+      '#description' => $this->t('The USAJobs API host address. Default: @api-host', ['@api-host' => $config->get('host')]),
       '#maxlength' => 64,
       '#size' => 64,
       '#default_value' => $config->get('host'),
@@ -144,11 +144,11 @@ class UsaJobsConfigForm extends ConfigFormBase {
     ];
 
     $fields = [
-    // [
-    //        'fieldName' => 'PositionID',
-    //        'fieldDescription' => 'Job Announcement Number',
-    //        'fieldType' => 'String',
-    //      ],
+      [
+        'fieldName' => 'PositionID',
+        'fieldDescription' => 'Job Announcement Number',
+        'fieldType' => 'String',
+      ],
       [
         'fieldName' => 'PositionTitle',
         'fieldDescription' => 'Title of the job offering.',
@@ -160,25 +160,30 @@ class UsaJobsConfigForm extends ConfigFormBase {
         'fieldType' => 'String',
       ],
       [
-        'fieldName' => 'ApplyURI',
-        'fieldDescription' => 'URI to apply for the job offering.',
-        'fieldType' => 'String',
+        'fieldName' => 'PositionLocationDisplay',
+        'fieldDescription' => 'Contains values for location name, country, country subdivision, city, latitude and longitude.',
+        'fieldType' => 'Object',
       ],
-      // [
-      //        'fieldName' => 'PositionLocation',
-      //        'fieldDescription' => 'Contains values for location name, country, country subdivision, city, latitude and longitude.',
-      //        'fieldType' => 'Object',
-      //      ],
       [
         'fieldName' => 'OrganizationName',
         'fieldDescription' => 'Name of the organization or agency offering the position.',
         'fieldType' => 'String',
       ],
-      // [
-      //        'fieldName' => 'JobGrade',
-      //        'fieldDescription' => 'List of job grade objects that contains an code value. This field is also known as Pay Plan.',
-      //        'fieldType' => 'Array',
-      //      ],
+      [
+        'fieldName' => 'DepartmentName',
+        'fieldDescription' => 'Name of the department within the organization or agency offering the position.',
+        'fieldType' => 'String',
+      ],
+      [
+        'fieldName' => 'JobCategory',
+        'fieldDescription' => 'List of job category objects that contain values for name and code.',
+        'fieldType' => 'Array',
+      ],
+      [
+        'fieldName' => 'JobGrade',
+        'fieldDescription' => 'List of job grade objects that contains an code value. This field is also known as Pay Plan.',
+        'fieldType' => 'Array',
+      ],
       [
         'fieldName' => 'PositionStartDate',
         'fieldDescription' => 'The date the job opportunity will be open to applications.',
@@ -190,11 +195,50 @@ class UsaJobsConfigForm extends ConfigFormBase {
         'fieldType' => 'Datetime',
       ],
       [
-        'fieldName' => 'ApplicationCloseDate',
-        'fieldDescription' => 'Last date applications will be accepted for the job opportunity.',
-        'fieldType' => 'Datetime',
+        'fieldName' => 'MinimumRange',
+        'fieldDescription' => 'Minimum salary range for the job offering.',
+        'fieldType' => 'String',
       ],
-
+      [
+        'fieldName' => 'MaximumRange',
+        'fieldDescription' => 'Maximum salary range for the job offering.',
+        'fieldType' => 'String',
+      ],
+      [
+        'fieldName' => 'MajorDuties',
+        'fieldDescription' => 'Description of the duties of the job.',
+        'fieldType' => 'Text',
+      ],
+      [
+        'fieldName' => 'JobSummary',
+        'fieldDescription' => 'Summary of the job opportunity.',
+        'fieldType' => 'Text',
+      ],
+      [
+        'fieldName' => 'LowGrade',
+        'fieldDescription' => 'Lowest potential grade level for the job opportunity.',
+        'fieldType' => 'String',
+      ],
+      [
+        'fieldName' => 'HighGrade',
+        'fieldDescription' => 'Highest potential grade level for the job opportunity.',
+        'fieldType' => 'String',
+      ],
+      [
+        'fieldName' => 'SubAgencyName',
+        'fieldDescription' => 'Name of the sub agency.',
+        'fieldType' => 'String',
+      ],
+      [
+        'fieldName' => 'TeleworkEligible',
+        'fieldDescription' => 'Telework or not.',
+        'fieldType' => 'Boolean',
+      ],
+      [
+        'fieldName' => 'RemoteIndicator',
+        'fieldDescription' => 'Remote or not.',
+        'fieldType' => 'Boolean',
+      ],
     ];
 
     $options = [];
@@ -222,13 +266,13 @@ class UsaJobsConfigForm extends ConfigFormBase {
     ];
 
     $field_data_source_default = [
-      'ApplyURI',
-      'ApplicationCloseDate',
-      'OrganizationName',
       'PositionTitle',
       'PositionURI',
       'PositionStartDate',
       'PositionEndDate',
+      'PositionLocationDisplay',
+      'MinimumRange',
+      'MaximumRange',
     ];
 
     foreach ($field_data_source_default as $field) {

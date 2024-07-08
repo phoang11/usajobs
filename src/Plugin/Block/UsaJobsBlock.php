@@ -25,9 +25,9 @@ class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface 
   protected $configFactory;
 
   /**
-   * Drupal\usajobs\Service\UsaJobsApiClientInterface definition.
+   * The USAJobs API client.
    *
-   * @var Drupal\usajobs\Service\UsaJobsApiClientInterface
+   * @var \Drupal\usajobs\Service\UsaJobsApiClientInterface
    */
   protected $usajobs;
 
@@ -64,22 +64,26 @@ class UsaJobsBlock extends BlockBase implements ContainerFactoryPluginInterface 
    */
   public function build() {
     $build = [];
+    $markup = '';
 
     $jobs = $this->usajobs->getJobs();
-    $jobs = $jobs->data->SearchResult->SearchResultItems;
+    if (!$jobs) {
+      $markup = $this->t("Couldn't connect to USAJobs API.");
 
-    // Allow other modules to alter the jobs data.
-    \Drupal::moduleHandler()->alter('usajobs_pre_render_jobs', $jobs, $this);
-
-    $markup = '';
-    foreach ($jobs as $job) {
-      $job_item = [
-        '#theme' => 'usajobs_item',
-        '#item' => $job->MatchedObjectDescriptor,
-      ];
-      $markup .= \Drupal::service('renderer')->render($job_item);
     }
 
+    if (!empty($jobs)) {
+      $jobs = $jobs->data->SearchResult->SearchResultItems;
+      // Allow other modules to alter the jobs data.
+      \Drupal::moduleHandler()->alter('usajobs_pre_render_jobs', $jobs, $this);
+      foreach ($jobs as $job) {
+        $job_item = [
+          '#theme' => 'usajobs_item',
+          '#item' => $job->MatchedObjectDescriptor,
+        ];
+        $markup .= \Drupal::service('renderer')->render($job_item);
+      }
+    }
     if (empty($markup)) {
       $markup = $this->t('Currently, there are no job openings available.');
     }

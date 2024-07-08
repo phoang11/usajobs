@@ -1,4 +1,8 @@
 services:
+  usajobs.logger_channel:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: logger.factory:get
+    arguments: ['usajobs']
   usajobs.api_client:
     class: Drupal\usajobs\Service\UsaJobsApiClient
-    arguments: ['@config.factory', '@logger.factory']
+    arguments: ['@config.factory', '@usajobs.logger_channel']

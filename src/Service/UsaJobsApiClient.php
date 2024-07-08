@@ -3,8 +3,7 @@
 namespace Drupal\usajobs\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Utility\Error;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -29,11 +28,11 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   protected $cacheDefault;
 
   /**
-   * Drupal\Core\Logger\LoggerChannelFactoryInterface definition.
+   * USAJobs Logger Channel.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
-  protected $loggerFactory;
+  protected $logger;
 
   /**
    * The config used to instantiate the REST API client.
@@ -47,16 +46,16 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config factory service.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   The logger factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger) {
 
     $this->configFactory = $config_factory;
-    $this->loggerFactory = $logger_factory;
+    $this->logger = $logger;
 
     // Get the config.
-    $config = $this->config();
+    $config = $this->configFactory->get('usajobs.settings');
 
     // Build the config for the REST API Client.
     $this->clientConfig = [
@@ -104,7 +103,7 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
       'ResultsPerPage' => $this->clientConfig['results_per_page'],
       'SortField' => $this->clientConfig['sort_field'],
     ];
-    $endpoint_url = 'https://' . $this->clientConfig['Host'] . self::USAJOBS_SEARCH_ENDPOINT;
+    $endpoint_url = $this->clientConfig['Host'] . self::USAJOBS_SEARCH_ENDPOINT;
     return $this->fetch($endpoint_url, $args);
   }
 
@@ -112,7 +111,7 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    * Get the Federal agency list from USAJOBs.
    */
   public function requestAgencyList() {
-    $endpoint_url = 'https://' . $this->clientConfig['Host'] . self::USAJOBS_AGENCY_SUBELEMENTS;
+    $endpoint_url = $this->clientConfig['Host'] . self::USAJOBS_AGENCY_SUBELEMENTS;
     return $this->fetch($endpoint_url);
   }
 
@@ -128,10 +127,35 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
 
     try {
       $client = \Drupal::httpClient();
-      $response = $client->get($endpoint_url, [
-        'headers' => $this->clientConfig,
-        'query' => $parameters,
-      ]);
+      if (empty($parameters)) {
+        $response = $client->get($endpoint_url, [
+          'headers' => [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+          ],
+        ]);
+      }
+      else {
+        $response = $client->get($endpoint_url, [
+          'headers' => [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'User-Agent' => $this->clientConfig['User-Agent'],
+            'Authorization-Key' => $this->clientConfig['Authorization-Key'],
+          ],
+          'query' => $parameters,
+        ]);
+      }
+
+      if (!$response) {
+        throw new \Exception('Empty Response');
+      }
+      $status_code = $response->getStatusCode();
+      if ($status_code < 200 || $status_code > 299) {
+        $this->logger->error("Couldn't connect to USAJobs Search API: @message",
+          ['@message' => $response->getReasonPhrase()]);
+        return FALSE;
+      }
 
       $results = new JsonResponse([
         'success' => TRUE,
@@ -143,14 +167,29 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
       return json_decode($results);
     }
     catch (RequestException $e) {
-      if (version_compare(\Drupal::VERSION, '10.1.0', '>=')) {
-        Error::logException($this->loggerFactory->get('usajobs'), $e);
+      if ($e->getCode() == 401) {
+        $this->logger->error("Couldn't connect to USAJobs Search API:
+        Received a 401 response from the API. @message",
+          ['@message' => $e->getMessage()]);
+      }
+      elseif ($e->getCode() == 404) {
+        $this->logger->error("Couldn't connect to USAJobs Search API:
+        Received a 404 response from the API. @message",
+          ['@message' => $e->getMessage()]);
       }
       else {
-        watchdog_exception('usajobs', $e);
+        $this->logger->error("Couldn't connect to USAJobs Search API:
+        @message", ['@message' => $e->getMessage()]);
       }
-      return FALSE;
+
     }
+
+    catch (\Exception $e) {
+      $this->logger->error("Couldn't connect to USAJobs API: @message",
+        ['@message' => $e->getMessage()]);
+    }
+
+    return FALSE;
   }
 
 }

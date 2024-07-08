@@ -1,12 +1,12 @@
-host: 'data.usajobs.gov'
+host: 'https://data.usajobs.gov'
 user_agent: ''
 authorization_key: ''
 field:
   field_data_source:
-    ApplyURI: ApplyURI
-    ApplicationCloseDate: ApplicationCloseDate
-    OrganizationName: OrganizationName
     PositionTitle: PositionTitle
     PositionURI: PositionURI
     PositionStartDate: PositionStartDate
     PositionEndDate: PositionEndDate
+    PositionLocationDisplay: PositionLocationDisplay
+    MinimumRange: MinimumRange
+    MaximumRange: MaximumRange
