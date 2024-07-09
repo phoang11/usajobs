@@ -9,6 +9,6 @@
         "source": "http://cgit.drupalcode.org/usajobs"
     },
     "require": {
-        "drupal/core": "^10.1 || ^11"
+        "drupal/core": "^10 || ^11"
     }
 }
