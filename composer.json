@@ -7,8 +7,5 @@
     "support": {
         "issues": "https://www.drupal.org/project/issues/usajobs",
         "source": "http://cgit.drupalcode.org/usajobs"
-    },
-    "require": {
-        "drupal/core": "^9"
     }
 }
