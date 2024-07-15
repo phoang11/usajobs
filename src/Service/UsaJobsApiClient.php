@@ -3,7 +3,9 @@
 namespace Drupal\usajobs\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -21,13 +23,6 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   protected $configFactory;
 
   /**
-   * Drupal\Core\Cache\CacheBackendInterface definition.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cacheDefault;
-
-  /**
    * USAJobs Logger Channel.
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
@@ -35,11 +30,11 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   protected $logger;
 
   /**
-   * The config used to instantiate the REST API client.
+   * The Guzzle HTTP client.
    *
-   * @var array
+   * @var \GuzzleHttp\ClientInterface
    */
-  private $clientConfig;
+  protected $httpClient;
 
   /**
    * Constructs a new UsaJobsApiClient object.
@@ -48,35 +43,23 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    *   Config factory service.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   The logger factory.
+   * @param \GuzzleHttp\ClientInterface $httpClient
+   *   The HTTP client.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger, ClientInterface $httpClient) {
 
     $this->configFactory = $config_factory;
     $this->logger = $logger;
-
-    // Get the config.
-    $config = $this->configFactory->get('usajobs.settings');
-
-    // Build the config for the REST API Client.
-    $this->clientConfig = [
-      'Host' => $config->get('host'),
-      'User-Agent' => $config->get('user_agent'),
-      'Authorization-Key' => $config->get('authorization_key'),
-      'organization_id' => $config->get('organization_id'),
-      'results_per_page' => $config->get('results_per_page'),
-      'sort_field' => $config->get('sort_field'),
-      'sort_direction' => $config->get('sort_direction'),
-      'Accept' => 'application/json',
-    ];
+    $this->httpClient = $httpClient;
   }
 
   /**
    * Get's usajobs settings.
    *
-   * @return string
-   *   Get the settings config name.
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   Get the settings config.
    */
-  protected function config() {
+  protected function config(): ImmutableConfig {
     return $this->configFactory->get(self::USAJOBS_CONFIG_NAME);
   }
 
@@ -99,11 +82,11 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    */
   public function requestJobs() {
     $args = [
-      'Organization' => $this->clientConfig['organization_id'],
-      'ResultsPerPage' => $this->clientConfig['results_per_page'],
-      'SortField' => $this->clientConfig['sort_field'],
+      'Organization' => $this->config()->get('organization_id'),
+      'ResultsPerPage' => $this->config()->get('results_per_page'),
+      'SortField' => $this->config()->get('sort_field'),
     ];
-    $endpoint_url = $this->clientConfig['Host'] . self::USAJOBS_SEARCH_ENDPOINT;
+    $endpoint_url = self::USAJOBS_HOST_URL . self::USAJOBS_SEARCH_ENDPOINT;
     return $this->fetch($endpoint_url, $args);
   }
 
@@ -111,7 +94,7 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
    * Get the Federal agency list from USAJOBs.
    */
   public function requestAgencyList() {
-    $endpoint_url = $this->clientConfig['Host'] . self::USAJOBS_AGENCY_SUBELEMENTS;
+    $endpoint_url = self::USAJOBS_HOST_URL . self::USAJOBS_AGENCY_SUBELEMENTS;
     return $this->fetch($endpoint_url);
   }
 
@@ -126,9 +109,9 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
   private function fetch($endpoint_url, array $parameters = []) {
 
     try {
-      $client = \Drupal::httpClient();
+
       if (empty($parameters)) {
-        $response = $client->get($endpoint_url, [
+        $response = $this->httpClient->request('GET', $endpoint_url, [
           'headers' => [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
@@ -136,12 +119,12 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
         ]);
       }
       else {
-        $response = $client->get($endpoint_url, [
+        $response = $this->httpClient->request('GET', $endpoint_url, [
           'headers' => [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'User-Agent' => $this->clientConfig['User-Agent'],
-            'Authorization-Key' => $this->clientConfig['Authorization-Key'],
+            'User-Agent' => $this->config()->get('user_agent'),
+            'Authorization-Key' => $this->config()->get('authorization_key'),
           ],
           'query' => $parameters,
         ]);
@@ -168,19 +151,17 @@ class UsaJobsApiClient implements UsaJobsApiClientInterface {
     }
     catch (RequestException $e) {
       if ($e->getCode() == 401) {
-        $this->logger->error("Couldn't connect to USAJobs Search API:
-        Received a 401 response from the API. @message",
-          ['@message' => $e->getMessage()]);
+        $errorMessage = "Received a 401 response from the API.";
       }
       elseif ($e->getCode() == 404) {
-        $this->logger->error("Couldn't connect to USAJobs Search API:
-        Received a 404 response from the API. @message",
-          ['@message' => $e->getMessage()]);
+        $errorMessage = "Received a 404 response from the API.";
       }
       else {
-        $this->logger->error("Couldn't connect to USAJobs Search API:
-        @message", ['@message' => $e->getMessage()]);
+        $errorMessage = "";
       }
+
+      $this->logger->error("Couldn't connect to USAJobs Search API: @message",
+        ['@message' => $errorMessage . $e->getMessage()]);
 
     }
 

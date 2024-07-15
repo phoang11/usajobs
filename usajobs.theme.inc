@@ -86,6 +86,11 @@ function template_preprocess_usajobs_item(&$variables) {
     $variables['job_high_grade'] = HTML::escape($item->UserArea->Details->HighGrade);
   }
 
+  $sub_agency = $config->get('field.field_data_source.SubAgencyName');
+  if (isset($sub_agency) && isset($item->SubAgency)) {
+    $variables['job_sub_agency'] = HTML::escape($item->SubAgency);
+  }
+
   $telework_eligible = $config->get('field.field_data_source.TeleworkEligible');
   if (isset($telework_eligible)) {
     $variables['job_telework_eligible'] = $item->UserArea->Details->TeleworkEligible;

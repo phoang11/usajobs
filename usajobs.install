@@ -14,3 +14,21 @@ function usajobs_update_80201() {
   $config->save();
   \Drupal::messenger()->addStatus(t('Updated the host configuration.'));
 }
+
+/**
+ * Remove host url from configuration.
+ */
+function usajobs_update_80300() {
+  $config = \Drupal::configFactory()->getEditable('usajobs.settings');
+  $config->clear('host');
+  $config->save();
+  \Drupal::messenger()->addStatus(t('Removed the host configuration.'));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function usajobs_uninstall() {
+  $config = \Drupal::configFactory()->getEditable('usajobs.settings');
+  $config->delete();
+}
