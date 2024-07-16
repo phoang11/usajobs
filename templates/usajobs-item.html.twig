@@ -12,7 +12,9 @@
   * - job_salary_min: Minimum salary job offer.
   * - job_salary_max: Maximum salary job offer.
   *
-  * Optional variables when selected on field data source to display:
+  * Optional variables when selected on Administration > Configuration >
+  * Web services > USAJobs Configuration > Field Data Source to display:
+  *
   * - job_position_id: Position ID.
   * - job_organization_name: Government organization name.
   * - job_department_name: Department name.
@@ -45,25 +47,29 @@
   </div>
   <div class="usajobs-item-end-date">Apply by {{ job_end_date }}</div>
 
-  {# <div class="usajobs-item-start-date">{{ job_start_date }}</div>
-  <div class="usajobs-item-position-id">{{ job_position_id }}</div>
-  <div class="usajobs-item-organization">{{ job_organization_name }}</div>
-  <div class="usajobs-item-department-name">{{ job_department_name }}</div>
-  <div class="usajobs-item-category-name">{{ job_category_name }}</div>
-  <div class="usajobs-item-category-code">{{ job_category_code }}</div>
-  <div class="usajobs-item-grade">{{ job_grade }}</div>
-  <div class="usajobs-item-major-duties">{{ job_major_duties }}</div>
-  <div class="usajobs-item-summary">{{ job_summary }}</div>
-  <div class="usajobs-item-low-grade">{{ job_low_grade }}</div>
-  <div class="usajobs-item-high-grade">{{ job_high_grade }}</div>
-  <div class="usajobs-item-telework-eligible">
+  {# Optional fields to display #}
+  {# <div class="usajobs-item-start-date">{{ job_start_date }}</div> #}
+  {# <div class="usajobs-item-position-id">{{ job_position_id }}</div> #}
+  {# <div class="usajobs-item-organization">{{ job_organization_name }}</div> #}
+  {# <div class="usajobs-item-department-name">{{ job_department_name }}</div> #}
+  {# <div class="usajobs-item-sub-agency-name">{{ job_sub_agency }}</div> #}
+  {# <div class="usajobs-item-category-name">{{ job_category_name }}</div> #}
+  {# <div class="usajobs-item-category-code">{{ job_category_code }}</div> #}
+  {# <div class="usajobs-item-grade">{{ job_grade }}</div> #}
+  {# <div class="usajobs-item-major-duties">{{ job_major_duties }}</div> #}
+  {# <div class="usajobs-item-summary">{{ job_summary }}</div> #}
+  {# <div class="usajobs-item-low-grade">{{ job_low_grade }}</div> #}
+  {# <div class="usajobs-item-high-grade">{{ job_high_grade }}</div> #}
+
+  {# <div class="usajobs-item-telework-eligible">
     {% if job_telework_eligible %}
       <span class="usajobs-item-telework-label">Telework Eligible</span>
     {% else %}
       <span class="usajobs-item-telework-label">Not Telework Eligible</span>
     {% endif %}
-  </div>
-  <div class="usajobs-item-remote-indicator">
+  </div> #}
+
+  {# <div class="usajobs-item-remote-indicator">
     {% if job_remote_indicator %}
       <span class="usajobs-item-remote-label">Remote</span>
     {% else %}

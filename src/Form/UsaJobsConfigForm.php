@@ -2,6 +2,7 @@
 
 namespace Drupal\usajobs\Form;
 
+use Drupal\Component\Utility\EmailValidator;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\usajobs\Service\UsaJobsApiClientInterface;
@@ -50,18 +51,9 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $config = $this->config('usajobs.settings');
 
     $form['usajobs_basic'] = [
-      '#title' => $this->t('Basic Settings'),
+      '#title' => $this->t('Authentication'),
       '#type' => 'fieldset',
       '#description' => $this->t('Accessing the USAJOBS API will require an API Key. To request an API Key, please go the <a href="@api-request" target="_blank"> API Access Request page</a>.', ['@api-request' => 'https://developer.usajobs.gov/APIRequest/Index']),
-    ];
-    $form['usajobs_basic']['host'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Host'),
-      '#description' => $this->t('The USAJobs API host address. Default: @api-host', ['@api-host' => $config->get('host')]),
-      '#maxlength' => 64,
-      '#size' => 64,
-      '#default_value' => $config->get('host'),
-      '#required' => TRUE,
     ];
     $form['usajobs_basic']['user_agent'] = [
       '#type' => 'email',
@@ -81,6 +73,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('authorization_key'),
       '#required' => TRUE,
     ];
+
     $form['usajobs_tabs'] = [
       '#type' => 'vertical_tabs',
       '#default_tab' => 'tab_api',
@@ -90,7 +83,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $form['query_tab'] = [
       '#title' => $this->t('Query Parameters'),
       '#type' => 'details',
-      '#description' => $this->t('The query parameters for search USAJobs API.'),
+      '#description' => $this->t('The query parameters for search USAJobs API. Visit the <a href="https://developer.usajobs.gov/api-reference/get-api-search">USAJobs API Reference</a> page for detailed information.'),
       '#group' => 'usajobs_tabs',
     ];
 
@@ -107,6 +100,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $form['query_tab']['results_per_page'] = [
       '#type' => 'select',
       '#title' => $this->t('Results Per Page'),
+      '#description' => $this->t('Select the number of results to display on block.'),
       '#options' => [
         5 => $this->t('5'),
         10 => $this->t('10'),
@@ -128,10 +122,12 @@ class UsaJobsConfigForm extends ConfigFormBase {
       '#type' => 'select',
       '#title' => $this->t('Sort Field'),
       '#options' => [
+        '' => $this->t('- None -'),
         'opendate' => $this->t('Position start date'),
         'closedate' => $this->t('Position end date'),
         'positiontitle' => $this->t('Position title'),
       ],
+      '#description' => $this->t('Select the field to sort the results by.'),
       '#default_value' => $config->get('sort_field') ?: UsaJobsApiClientInterface::SORT_FIELD,
     ];
 
@@ -139,7 +135,7 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $form['field_tab'] = [
       '#title' => $this->t('Field Data Source'),
       '#type' => 'details',
-      '#description' => $this->t('Select the field data source to display on block or your custom template.'),
+      '#description' => $this->t('Select the optional field data source to be displayed on your custom twig template file.'),
       '#group' => 'usajobs_tabs',
     ];
 
@@ -244,9 +240,9 @@ class UsaJobsConfigForm extends ConfigFormBase {
     $options = [];
     foreach ($fields as $field) {
       $options[$field['fieldName']] = [
-        'fieldName' => $this->t($field['fieldName']),
-        'fieldDescription' => $this->t($field['fieldDescription']),
-        'fieldType' => $this->t($field['fieldType']),
+        'fieldName' => $field['fieldName'],
+        'fieldDescription' => $field['fieldDescription'],
+        'fieldType' => $field['fieldType'],
       ];
     }
 
@@ -279,7 +275,51 @@ class UsaJobsConfigForm extends ConfigFormBase {
       $form['field_tab']['field_data_source'][$field]['#disabled'] = TRUE;
     }
 
+    // Extras Settings tab.
+    $form['extras_tab'] = [
+      '#title' => $this->t('Extras Settings'),
+      '#type' => 'details',
+      '#description' => $this->t('Extras settings to tweak the results data.'),
+      '#group' => 'usajobs_tabs',
+    ];
+
+    $form['extras_tab']['no_results_message'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('No Results Message'),
+      '#description' => $this->t('Message to display when no results are found.'),
+      '#default_value' => $config->get('no_results_message') ?: UsaJobsApiClientInterface::NO_RESULTS_MESSAGE,
+    ];
+
+    $form['extras_tab']['sub_agency_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Sub Agency Name'),
+      '#description' => $this->t('Filter the display results by the name of the sub-agency or hiring office.<br /> For example, enter "Healthcare and Insurance" as hiring office for OPM.'),
+      '#default_value' => $config->get('sub_agency_name'),
+    ];
+
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Check for valid email address.
+    $email_validator = new EmailValidator();
+    if (!$email_validator->isValid($form_state->getValue('user_agent'))) {
+      $form_state->setErrorByName('user_agent', $this->t('The User-Agent must be a valid email address.'));
+    }
+
+    // Check for empty Authorization Key.
+    if (empty($form_state->getValue('authorization_key'))) {
+      $form_state->setErrorByName('authorization_key', $this->t('The Authorization Key is required.'));
+    }
+
+    // Check for HTML tags.
+    if (strip_tags($form_state->getValue('no_results_message')) != $form_state->getValue('no_results_message')) {
+      $form_state->setErrorByName('no_results_message', $this->t('The No Results Message field should not contain HTML tags.'));
+    }
+
   }
 
   /**
@@ -289,13 +329,14 @@ class UsaJobsConfigForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $this->config('usajobs.settings')
-      ->set('host', $form_state->getValue('host'))
       ->set('user_agent', $form_state->getValue('user_agent'))
       ->set('authorization_key', $form_state->getValue('authorization_key'))
       ->set('organization_id', $form_state->getValue('organization_id'))
       ->set('results_per_page', $form_state->getValue('results_per_page'))
       ->set('sort_field', $form_state->getValue('sort_field'))
       ->set('field.field_data_source', array_filter($form_state->getValue('field_data_source')))
+      ->set('no_results_message', $form_state->getValue('no_results_message'))
+      ->set('sub_agency_name', $form_state->getValue('sub_agency_name'))
       ->save();
   }
 
@@ -312,12 +353,10 @@ class UsaJobsConfigForm extends ConfigFormBase {
    * Get Agency Sub Elements.
    */
   protected function getAgencySubElements() {
-    // Get Agency List data.
     $agencies = $this->usajobs->getAgencyList();
     $agency_sub_elements = [];
     if ($agencies) {
-      $agencies = $agencies->data->CodeList[0]->ValidValue;
-      foreach ($agencies as $agency) {
+      foreach ($agencies->data->CodeList[0]->ValidValue as $agency) {
         if ($agency->IsDisabled == 'No') {
           $agency_sub_elements[$agency->Code] = $agency->Value;
         }

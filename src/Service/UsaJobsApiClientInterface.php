@@ -10,9 +10,19 @@ namespace Drupal\usajobs\Service;
 interface UsaJobsApiClientInterface {
 
   /**
-   * The usajobs config name.
+   * The base URL of the USAJobs API.
+   */
+  const USAJOBS_HOST_URL = 'https://data.usajobs.gov';
+
+  /**
+   * The name of the USAJobs configuration.
    */
   const USAJOBS_CONFIG_NAME = 'usajobs.settings';
+
+  /**
+   * No results message.
+   */
+  const NO_RESULTS_MESSAGE = 'Currently, there are no job openings available.';
 
   /**
    * The number of results per page.
@@ -25,12 +35,12 @@ interface UsaJobsApiClientInterface {
   const SORT_FIELD = 'closedate';
 
   /**
-   * The USAJobs Job Search endpoint.
+   * The search endpoint of the USAJobs API.
    */
   const USAJOBS_SEARCH_ENDPOINT = '/api/Search';
 
   /**
-   * The USAJobs Agency Subelements endpoint .
+   * The agency subelements endpoint of the USAJobs API.
    */
   const USAJOBS_AGENCY_SUBELEMENTS = '/api/codelist/agencysubelements';
 

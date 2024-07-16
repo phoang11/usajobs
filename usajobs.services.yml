@@ -5,4 +5,4 @@ services:
     arguments: ['usajobs']
   usajobs.api_client:
     class: Drupal\usajobs\Service\UsaJobsApiClient
-    arguments: ['@config.factory', '@usajobs.logger_channel']
+    arguments: ['@config.factory', '@usajobs.logger_channel', '@http_client']
